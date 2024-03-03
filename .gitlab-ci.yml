@@ -1,0 +1,50 @@
+image: docker:18.09.5-git
+
+stages:
+  - build
+
+variables:
+  GIT_STRATEGY: fetch
+  SHARED_PATH: $CI_PROJECT_DIR
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  GITLAB_DOMAIN: git.компания.ru
+  GITLAB_PROJECT_GROUP_ID: 1161
+  COMPOSER_TOKEN: VoZDHjB9LQGYJDcbZkyZ
+  CI_REGISTRY: registry.поддомен.компания.ru
+  CI_REGISTRY_USER: вашюзер
+  CI_REGISTRY_PASSWORD: введитепароль
+  COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composer_cache"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .composer_cache/
+
+Сборка образа:
+  image: docker:git
+  stage: build
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  variables:
+    JOB_NAME: "build-docker-image"
+    CI_REGISTRY_IMAGE: registry.поддомен.компания.ru/${CI_PROJECT_PATH}
+  tags:
+    - docker
+    - builds
+  script:
+    - |
+      if [[ $CI_COMMIT_TAG != "" ]]; then
+        tag=":$CI_COMMIT_TAG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': TAG = $TAG"
+      elif [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': TAG = ':latest'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': TAG = $TAG"
+      fi
+    - echo "$(git log --pretty=format:'%h' -n 1) $(date +%m%d%H%M)" > build-date.txt
+    - apk add jq
+    - docker build --pull -t "${DOCKER_ENV_CI_REGISTRY_IMAGE:-$CI_REGISTRY_IMAGE}${tag}" .
+    - docker push "${DOCKER_ENV_CI_REGISTRY_IMAGE:-$CI_REGISTRY_IMAGE}${tag}"
