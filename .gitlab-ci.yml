@@ -10,7 +10,7 @@ variables:
   DOCKER_TLS_CERTDIR: ""
   GITLAB_DOMAIN: git.компания.ru
   GITLAB_PROJECT_GROUP_ID: 1161
-  COMPOSER_TOKEN: VoZDHjB9LQGYJDcbZkyZ
+  COMPOSER_TOKEN: ваштокен
   CI_REGISTRY: registry.поддомен.компания.ru
   CI_REGISTRY_USER: вашюзер
   CI_REGISTRY_PASSWORD: введитепароль
